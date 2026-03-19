@@ -5,20 +5,22 @@ class Program
 {
     static void Main()
     {
-        GameLoop game = new();
+        UserInterface userInterface = new();
+        int size = userInterface.WorldSize("How big would you like the world to be? (4x4, 6x6, 8x8) ");
+        GameLoop game = new(size);
     }
 }
 
 class GameLoop
 {
     bool loop = true;
-    static Movement movement = new();
-    public GameLoop()
+    static Movement? movement;
+    public GameLoop(int size)
     {
-        
+        movement = new Movement(size);
         while (loop)
         {
-            movement.Move(ref loop);
+            movement.Move(ref loop, size);
         }
     }
 }
@@ -27,10 +29,10 @@ class UserInterface
 {
     public static readonly Dictionary<string, List<string>> movementOptions = new()
     {
-        {"East", new List<string>{"move east","Move East", "Move east", "move East"}},
-        {"West", new List<string>{"move west", "Move West", "Move west", "move West"}},
-        {"North", new List<string>{"move north", "Move North", "Move north", "move North"}},
-        {"South", new List<string>{"move south", "Move South", "Move south", "move South"}}
+        {"East", new List<string>{"move east","Move East", "Move east", "move East", "East", "east"}},
+        {"West", new List<string>{"move west", "Move West", "Move west", "move West", "West", "west"}},
+        {"North", new List<string>{"move north", "Move North", "Move north", "move North", "North", "north"}},
+        {"South", new List<string>{"move south", "Move South", "Move south", "move South", "South", "south"}}
     };
 
         public void PrintMessages()
@@ -42,37 +44,58 @@ class UserInterface
         Console.WriteLine();
     }
 
-    public string? ReadInput(string message)
+    public string? ReadInput(string message, Dictionary<string, List<string>> dict)
     {
         Console.Write(message);
         string? input;
         bool match = false;
         //Get correct input
         input = Console.ReadLine();
-        (input, match) = CheckInput(input, ReadInput, false);
+        (input, match) = CheckInput(input, ReadInput, false, dict);
 
         return input;
     }
 
-    public static (string?, bool) CheckInput(string? input, Func<string, string?> operation, bool match)
+    public static (string?, bool) CheckInput(string? input, Func<string, Dictionary<string, List<string>>, string?> operation, bool match, Dictionary<string, List<string>> options)
     {
         string? key = input;
         //loop through all the possible options to make sure the input is valid
-        foreach (KeyValuePair<string, List<string>> item in movementOptions)
+        foreach (KeyValuePair<string, List<string>> item in options)
         {
             foreach (string val in item.Value) if (val == input) 
             {
-                match = true;
-                key = item.Key;
+                return (item.Key, true);
             }
         }
         if (match == false || input == null) 
         {
             //Console.Write(errormessage)
-            input = operation("Please enter a valid input. ");
+            input = operation("Please enter a valid input. ", options);
             return (input, false);
         }
         else return (key, true);
+    }
+
+    public int WorldSize(string message)
+    {
+        Dictionary<string, List<string>> validInputs = new Dictionary<string, List<string>>
+        {
+            {"4x4", new List<string>{"4x4", "4"}},
+            {"6x6", new List<string>{"6x6", "6"}},
+            {"8x8", new List<string>{"8x8", "8"}}
+        };
+        string? input = ReadInput(message, validInputs);
+        switch (input)
+        {
+            case "4x4":
+                return 4;
+            case "6x6":
+                return 6;
+            case "8x8":
+                return 8;
+            default: 
+                return WorldSize("Please enter a valid input: (4, 6, 8) ");      
+        }
     }
 }
 
@@ -82,28 +105,28 @@ class Movement
     (int x, int y) location = (1, 1);
     UserInterface _interface = new UserInterface();
 
-    public Movement()
+    public Movement(int size)
     {
-        for (int i= 1; i<=4; i++)
+        for (int i= 1; i<=size; i++)
         {
-            for (int j = 1; j<=4; j++)
+            for (int j = 1; j<=size; j++)
             {
                 grid.Add((i, j, new List<string>()));
             }
         }
     }
     
-    public void Move(ref bool loop)
+    public void Move(ref bool loop, int size)
     {
         _interface.PrintMessages();
         Console.WriteLine($"You are in a room at {location.x}, {location.y}");
-        string? movement = _interface.ReadInput("What do you want to do? (move east, move west, move north, move south) ");
+        string? movement = _interface.ReadInput("What do you want to do? (move east, move west, move north, move south) ", UserInterface.movementOptions);
         string bounds = "You hit the wall. ";
 
         switch (movement)
         {
             case "East":
-                if (location.x == 4) Console.WriteLine(bounds);
+                if (location.x == size) Console.WriteLine(bounds);
                 else location.x += 1;
                 break;
             case "West":
@@ -115,7 +138,7 @@ class Movement
                 else location.y -= 1;
                 break;
             case "South":
-                if (location.y == 4) Console.WriteLine(bounds);
+                if (location.y == size) Console.WriteLine(bounds);
                 else location.y += 1;
                 break; 
         }

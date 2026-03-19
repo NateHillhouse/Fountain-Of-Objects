@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Fountain-Of-Objects")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+360818432ddb81fe6b3e7220c95f942a46138597")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8b723a864b80002805c2c9c456bf62eb96d8f324")]
 [assembly: System.Reflection.AssemblyProductAttribute("Fountain-Of-Objects")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Fountain-Of-Objects")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
