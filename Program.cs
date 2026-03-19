@@ -56,10 +56,15 @@ class UserInterface
 
     public static (string?, bool) CheckInput(string? input, Func<string, string?> operation, bool match)
     {
+        string? key = input;
         //loop through all the possible options to make sure the input is valid
         foreach (KeyValuePair<string, List<string>> item in movementOptions)
         {
-            foreach (string val in item.Value) if (val == input) match = true;
+            foreach (string val in item.Value) if (val == input) 
+            {
+                match = true;
+                key = item.Key;
+            }
         }
         if (match == false || input == null) 
         {
@@ -67,7 +72,7 @@ class UserInterface
             input = operation("Please enter a valid input. ");
             return (input, false);
         }
-        else return (input, true);
+        else return (key, true);
     }
 }
 
@@ -94,33 +99,22 @@ class Movement
         Console.WriteLine($"You are in a room at {location.x}, {location.y}");
         string? movement = _interface.ReadInput("What do you want to do? (move east, move west, move north, move south) ");
         string bounds = "You hit the wall. ";
+
         switch (movement)
         {
-            case "move east":
-            case "Move East":
-            case "Move east":
-            case "move East":
+            case "East":
                 if (location.x == 4) Console.WriteLine(bounds);
                 else location.x += 1;
                 break;
-            case "move west":
-            case "Move West":
-            case "Move west":
-            case "move West":
+            case "West":
                 if (location.x == 1) Console.WriteLine(bounds);
                 else location.x -= 1;
                 break;
-            case "move north":
-            case "Move North":
-            case "Move north":
-            case "move North":
+            case "North":
                 if (location.y == 1) Console.WriteLine(bounds);
                 else location.y -= 1;
                 break;
-            case "move south":
-            case "Move South":
-            case "Move south":
-            case "move South":
+            case "South":
                 if (location.y == 4) Console.WriteLine(bounds);
                 else location.y += 1;
                 break; 
