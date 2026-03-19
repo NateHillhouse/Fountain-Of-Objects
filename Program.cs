@@ -18,6 +18,7 @@ class GameLoop
     public GameLoop(int size)
     {
         movement = new Movement(size);
+        movement.RandomizeObstacles(size);
         while (loop)
         {
             movement.Move(ref loop, size);
@@ -101,18 +102,91 @@ class UserInterface
 
 class Movement
 {
-    List<(int row, int column, List<string> contains)> grid = [];
     (int x, int y) location = (1, 1);
-    UserInterface _interface = new UserInterface();
+    readonly UserInterface _interface = new();
+    Dictionary<(int, int), string> worldGrid = new();
 
     public Movement(int size)
     {
+        //Create world upon class initialization
         for (int i= 1; i<=size; i++)
         {
             for (int j = 1; j<=size; j++)
             {
-                grid.Add((i, j, new List<string>()));
+                worldGrid.Add((i, j), "");
+                switch (i,j)
+                {
+                    case (1,1):
+                        worldGrid[(i, j)] = ("entrance");
+                        break;
+                    default: break;
+                }
             }
+        }
+    }
+
+    public void RandomizeObstacles(int size)
+    {
+        Random rand = new();
+        Dictionary<string, int> obstacles = new Dictionary<string, int>
+        {
+            {"Pit", 0},
+            {"Maelstroms", 0},
+            {"Amaroks", 0}
+        };
+        switch (size)
+        {
+            case 4:
+                obstacles["Pit"] = 1;
+                break;
+            case 6:
+                obstacles["Pit"] = 2;
+                obstacles["Maelstrom"] = 1;
+                obstacles["Amaroks"] = 2;
+                break;
+            case 8:
+                obstacles["Pit"] = 4;
+                obstacles["Maelstrom"] = 2;
+                obstacles["Amaroks"] = 3;
+                break;
+        }
+        
+        foreach (KeyValuePair<string, int> pair in obstacles)
+        {
+            Console.WriteLine(pair.Value);
+            while (pair.Value > 0)
+            {
+                (List<int> x, List<int> y) usedSpaces = (new List<int>(), new List<int>());
+                (int, int) location = Randomize(usedSpaces);
+                Console.WriteLine(location);
+                while (worldGrid[location] is not null) location = Randomize(usedSpaces);
+                worldGrid[location] = pair.Key; 
+                obstacles[pair.Key] --;
+                Console.WriteLine(pair.Value);
+            }
+        }
+        for (int i = 0; i < size; i ++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                if (worldGrid[(i, j)] == null) Console.Write("Empty  ");
+                else Console.Write(worldGrid[(i,j)]);
+            }
+            Console.WriteLine();
+        }
+
+        (int, int) Randomize((List<int> x, List<int> y) spaces)
+        {
+            int x = rand.Next(1,size+1);
+            int y = rand.Next(1,size+1);
+            foreach (int i in spaces.x)
+            {
+                foreach (int j in spaces.y)
+                {
+                    if (worldGrid[(i,j)] is not null) Randomize(spaces);
+                }
+            }
+            return (x, y);
         }
     }
     
