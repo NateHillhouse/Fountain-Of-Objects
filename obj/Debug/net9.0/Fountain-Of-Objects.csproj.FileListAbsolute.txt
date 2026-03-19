@@ -1,0 +1,14 @@
+C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\bin\Debug\net9.0\Fountain-Of-Objects.exe
+C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\bin\Debug\net9.0\Fountain-Of-Objects.deps.json
+C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\bin\Debug\net9.0\Fountain-Of-Objects.runtimeconfig.json
+C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\bin\Debug\net9.0\Fountain-Of-Objects.dll
+C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\bin\Debug\net9.0\Fountain-Of-Objects.pdb
+C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\obj\Debug\net9.0\Fountain-Of-Objects.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\obj\Debug\net9.0\Fountain-Of-Objects.AssemblyInfoInputs.cache
+C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\obj\Debug\net9.0\Fountain-Of-Objects.AssemblyInfo.cs
+C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\obj\Debug\net9.0\Fountain-Of-Objects.csproj.CoreCompileInputs.cache
+C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\obj\Debug\net9.0\Fountain-Of-Objects.dll
+C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\obj\Debug\net9.0\refint\Fountain-Of-Objects.dll
+C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\obj\Debug\net9.0\Fountain-Of-Objects.pdb
+C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\obj\Debug\net9.0\Fountain-Of-Objects.genruntimeconfig.cache
+C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\obj\Debug\net9.0\ref\Fountain-Of-Objects.dll
