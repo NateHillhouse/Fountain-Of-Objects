@@ -12,3 +12,4 @@ C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\o
 C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\obj\Debug\net9.0\Fountain-Of-Objects.pdb
 C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\obj\Debug\net9.0\Fountain-Of-Objects.genruntimeconfig.cache
 C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\obj\Debug\net9.0\ref\Fountain-Of-Objects.dll
+C:\Users\nhill_mliw72r\Documents\Code_Projects\my-code-dir\Fountain-Of-Objects\obj\Debug\net9.0\Fountain-Of-Objects.sourcelink.json
