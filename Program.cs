@@ -14,19 +14,24 @@ class Program
 class GameLoop
 {
     bool loop = true;
-    static Movement? movement;
+    public static Movement? movement;
+    static readonly Obstacles Obstacles = new();
+    static readonly UserInterface _interface = new();
     public GameLoop(int size)
     {
         movement = new Movement(size);
-        movement.RandomizeObstacles(size);
+        Obstacles.RandomizeObstacles(size, ref movement.worldGrid);
         while (loop)
         {
-            movement.Move(ref loop, size);
+            Obstacles.PrintGrid(movement.worldGrid, size, movement.location);
+            _interface.PrintMessages();
+            Obstacles.SenseObstacles(movement.worldGrid, movement.location, size);
+            movement.Move(ref loop, size, _interface);
         }
     }
 }
 
-class UserInterface
+public class UserInterface
 {
     public static readonly Dictionary<string, List<string>> movementOptions = new()
     {
@@ -100,32 +105,9 @@ class UserInterface
     }
 }
 
-class Movement
+public class Obstacles
 {
-    (int x, int y) location = (1, 1);
-    readonly UserInterface _interface = new();
-    Dictionary<(int, int), string> worldGrid = new();
-
-    public Movement(int size)
-    {
-        //Create world upon class initialization
-        for (int i= 1; i<=size; i++)
-        {
-            for (int j = 1; j<=size; j++)
-            {
-                worldGrid.Add((i, j), "");
-                switch (i,j)
-                {
-                    case (1,1):
-                        worldGrid[(i, j)] = ("entrance");
-                        break;
-                    default: break;
-                }
-            }
-        }
-    }
-
-    public void RandomizeObstacles(int size)
+    public static Dictionary<(int, int), string> RandomizeObstacles(int size, ref Dictionary<(int x, int y), string> worldGrid)
     {
         Random rand = new();
         Dictionary<string, int> obstacles = new Dictionary<string, int>
@@ -151,52 +133,116 @@ class Movement
                 break;
         }
         
+        List<(int x, int y)> usedSpaces = new List<(int x, int y)>();
         foreach (KeyValuePair<string, int> pair in obstacles)
         {
-            Console.WriteLine(pair.Value);
-            while (pair.Value > 0)
+            while (obstacles[pair.Key] > 0)
             {
-                (List<int> x, List<int> y) usedSpaces = (new List<int>(), new List<int>());
-                (int, int) location = Randomize(usedSpaces);
-                Console.WriteLine(location);
-                while (worldGrid[location] is not null) location = Randomize(usedSpaces);
-                worldGrid[location] = pair.Key; 
+                (int x, int y) location = Randomize(usedSpaces);
+                while (worldGrid[location] != "") 
+                {
+                    location = Randomize(usedSpaces);
+                }
+                worldGrid[location] = pair.Key;
                 obstacles[pair.Key] --;
-                Console.WriteLine(pair.Value);
-            }
+            } 
         }
-        for (int i = 0; i < size; i ++)
-        {
-            for (int j = 0; j < size; j++)
-            {
-                if (worldGrid[(i, j)] == null) Console.Write("Empty  ");
-                else Console.Write(worldGrid[(i,j)]);
-            }
-            Console.WriteLine();
-        }
+        
+        return worldGrid;
 
-        (int, int) Randomize((List<int> x, List<int> y) spaces)
+
+        (int, int) Randomize(List<(int x, int y)> spaces)
         {
             int x = rand.Next(1,size+1);
             int y = rand.Next(1,size+1);
-            foreach (int i in spaces.x)
+            
+            foreach ((int x, int y) item in spaces)
             {
-                foreach (int j in spaces.y)
-                {
-                    if (worldGrid[(i,j)] is not null) Randomize(spaces);
-                }
+                Console.Write($"{item.x}, {item.y}");
             }
+            if (spaces.Contains((x, y))) return Randomize(spaces);
             return (x, y);
         }
+
+
     }
-    
-    public void Move(ref bool loop, int size)
+    public void PrintGrid(Dictionary<(int, int), string> worldGrid, int size, (int, int) location)
     {
-        _interface.PrintMessages();
+        for (int i = 1; i <= size; i ++)
+        {
+            for (int j = 1; j <= size; j++)
+            {
+                if (worldGrid[(j,i)] != "") Console.Write(worldGrid[(j,i)]+ " ");
+                else if ((j,i) == location) Console.Write("Player ");
+                else Console.Write("Empty ");
+            }
+            Console.WriteLine();
+        }
+    }
+    public static void SenseObstacles(Dictionary<(int, int), string> worldGrid, (int x, int y) player, int size)
+    {
+        (int x, int y) location = player;
+        for (int x = -1; x < 2; x++)
+        {
+            location.x = player.x + x;
+            if (location.x > 0 && location.x <= size) 
+            {
+                for (int y = -1; y < 2; y++)
+                {
+                    location.y = player.y + y;
+                    if (location.y > 0 && location.y <= size) 
+                    {
+                        CheckForObstacles(location);
+                    }
+                }
+            }
+        }
+
+        void loop((int x, int y) player)
+        {
+            
+        }
+
+        void CheckForObstacles((int, int) locationToCheck)
+        {
+            List<string> obstacles = [];
+            if (worldGrid[locationToCheck] == "Pit") Console.WriteLine("You feel a draft. There is a pit in a nearby room.");
+            if (worldGrid[locationToCheck] == "Maelstroms") Console.WriteLine("You hear the growling and groaning of a maelstrom nearby."); 
+            if (worldGrid[locationToCheck] == "Amaroks") Console.WriteLine("You can smell the rotten stench of an amarok in a nearby room."); 
+        }
+    }
+}
+
+public class Movement
+{
+    public (int x, int y) location = (1, 1);
+    public Dictionary<(int x, int y), string> worldGrid = new();
+
+    public Movement(int size)
+    {
+        //Create world upon class initialization
+        for (int i= 1; i<=size; i++)
+        {
+            for (int j = 1; j<=size; j++)
+            {
+                worldGrid.Add((j, i), "");
+                switch (j,i)
+                {
+                    case (1,1):
+                        worldGrid[(j, i)] = "entrance";
+                        break;
+                }
+            }
+        }
+    }
+
+
+    
+    public void Move(ref bool loop, int size, UserInterface _interface)
+    {
         Console.WriteLine($"You are in a room at {location.x}, {location.y}");
         string? movement = _interface.ReadInput("What do you want to do? (move east, move west, move north, move south) ", UserInterface.movementOptions);
         string bounds = "You hit the wall. ";
-
         switch (movement)
         {
             case "East":
@@ -216,8 +262,32 @@ class Movement
                 else location.y += 1;
                 break; 
         }
-        if (location == (4,4)) loop = false;
+        loop = HitObstacles();
+        if (location == (size,size)) loop = false;
     }
+
+    public bool HitObstacles()
+    {
+        string item = worldGrid[location];
+            Console.WriteLine(item);
+            switch (item)
+            {
+                case "Pit":
+                    Console.WriteLine("You fell in a pit and died. ");
+                    return false;
+                case "Amaroks":
+                    Console.WriteLine("You got eaten by an Amarok. ");
+                    return false;
+                case "Maelstrom":
+                    return true;
+                case "Entrance":
+                    Console.WriteLine("You are at the entrance. ");
+                    return true;
+                default:
+                    return true;
+            }
+    }
+
 }
 
 
