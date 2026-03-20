@@ -12,23 +12,25 @@ class Program
     }
 }
 
-class GameLoop
+public class GameLoop
 {
-    bool loop = true;
+    public static bool fountainActive = false;
+    static bool loop = true;
     public static Movement? movement;
     static readonly Obstacles Obstacles = new();
-    static readonly UserInterface _interface = new();
-    public int size;
+    public static readonly UserInterface _interface = new();
+    public static readonly UserInterface.ChangeUserOptions changeUserOptions = new();
+    public static int size;
     public GameLoop(int _size)
     {
         size = _size;
         movement = new Movement(size);
-        _interface.AddShooting(size);
+        changeUserOptions.AddShooting(size);
         Obstacles.RandomizeObstacles(size, ref movement.worldGrid);
         int arrowsLeft = movement.arrows;
         while (loop)
         {
-            Obstacles.PrintGrid(movement.worldGrid, size, movement.location);
+            //Obstacles.PrintGrid(movement.worldGrid, size, movement.location);
             _interface.PrintMessages();
             Obstacles.SenseObstacles(movement.worldGrid, movement.location, size);
             if (arrowsLeft > movement.arrows) 
@@ -36,7 +38,7 @@ class GameLoop
                 arrowsLeft = movement.arrows;
                 Console.WriteLine($"You have {arrowsLeft} arrows left.");
             }
-            movement.Move(ref loop, size, _interface);
+            movement.Move(this, ref loop, size, fountainActive, _interface, changeUserOptions);
         }
     }
 }
@@ -50,29 +52,37 @@ public class UserInterface
         {"North", new List<string>{"move north", "Move North", "Move north", "move North", "North", "north"}},
         {"South", new List<string>{"move south", "Move South", "Move south", "move South", "South", "south"}},
     };
-    public void AddShooting(int size)
+
+    public class ChangeUserOptions
     {
-        if (size != 4)
+        public void AddShooting(int size)
         {
-            Dictionary<string, List<string>> shootingOptions = new()
+            if (size != 4)
             {
-                {"Shoot South", new List<string>{"shoot south", "Shoot South", "Shoot south", "shoot South"}},
-                {"Shoot North", new List<string>{"shoot north", "Shoot North", "Shoot north", "shoot North"}},
-                {"Shoot East", new List<string>{"shoot east", "Shoot East", "Shoot east", "shoot East"}},
-                {"Shoot West", new List<string>{"shoot west", "Shoot West", "Shoot west", "shoot West"}}
-            };
-            foreach(KeyValuePair<string, List<string>> items in shootingOptions) movementOptions.Add(items.Key, items.Value);
+                Dictionary<string, List<string>> shootingOptions = new()
+                {
+                    {"Shoot South", new List<string>{"shoot south", "Shoot South", "Shoot south", "shoot South"}},
+                    {"Shoot North", new List<string>{"shoot north", "Shoot North", "Shoot north", "shoot North"}},
+                    {"Shoot East", new List<string>{"shoot east", "Shoot East", "Shoot east", "shoot East"}},
+                    {"Shoot West", new List<string>{"shoot west", "Shoot West", "Shoot west", "shoot West"}}
+                };
+                foreach(KeyValuePair<string, List<string>> items in shootingOptions) movementOptions.Add(items.Key, items.Value);
+            }
+        }
+        
+        public void AddFountain()
+        {
+            movementOptions.Add("Activate Fountain", new List<string> {"Activate Fountain", "Activate fountain", "activate Fountain", "activate fountain"});
         }
     }
-
-        public void PrintMessages()
+    public void PrintMessages()
+    {
+        for (int length = 0; length < Console.WindowWidth; length ++)
         {
-            for (int length = 0; length < Console.WindowWidth; length ++)
-            {
-                Console.Write("-");
-            }
-            Console.WriteLine();
+            Console.Write("-");
         }
+        Console.WriteLine($"You are in the room at {GameLoop.movement.location.x}, {GameLoop.movement.location.y}");
+    }
 
     public string? ReadInput(string message, Dictionary<string, List<string>> dict)
     {
@@ -138,19 +148,23 @@ public class Obstacles
         {
             {"Pit", 0},
             {"Maelstroms", 0},
-            {"Amaroks", 0}
+            {"Amaroks", 0},
+            {"Fountain", 1}
         };
         switch (size)
         {
             case 4:
+                obstacles["Fountain"] = 1;
                 obstacles["Pit"] = 1;
                 break;
             case 6:
+                obstacles["Fountain"] = 1;
                 obstacles["Pit"] = 2;
                 obstacles["Maelstrom"] = 1;
                 obstacles["Amaroks"] = 2;
                 break;
             case 8:
+                obstacles["Fountain"] = 1;
                 obstacles["Pit"] = 4;
                 obstacles["Maelstrom"] = 2;
                 obstacles["Amaroks"] = 3;
@@ -217,16 +231,19 @@ public class Obstacles
                     if (location.y > 0 && location.y <= size) 
                     {
                         CheckForObstacles(location);
+                        
                     }
                 }
             }
         }
+        if (worldGrid[player] == "Fountain" && !GameLoop.fountainActive) Console.WriteLine("You hear water dripping in this room. The Fountain of Objects is here!"); 
 
         void CheckForObstacles((int, int) locationToCheck)
         {
             if (worldGrid[locationToCheck] == "Pit") Console.WriteLine("You feel a draft. There is a pit in a nearby room.");
             if (worldGrid[locationToCheck] == "Maelstroms") Console.WriteLine("You hear the growling and groaning of a maelstrom nearby."); 
             if (worldGrid[locationToCheck] == "Amaroks") Console.WriteLine("You can smell the rotten stench of an amarok in a nearby room."); 
+                                
         }
     }
 }
@@ -255,12 +272,18 @@ public class Movement
         }
     }
     
-    public void Move(ref bool loop, int size, UserInterface _interface)
+    public void Move(GameLoop game, ref bool loop, int size, bool fountainActive, UserInterface _interface, UserInterface.ChangeUserOptions changeUserOptions)
     {
-        Console.WriteLine($"You are in a room at {location.x}, {location.y}");
         string? movement;
-        if (size == 4) movement = _interface.ReadInput("What do you want to do? (move: east, west, north, or south) ", UserInterface.movementOptions);
-        else movement = _interface.ReadInput("What do you want to do? (move or shoot: east, west, north, or south) ", UserInterface.movementOptions);
+        string message = $"You are in a room at {location.x}, {location.y}\rWhat do you want to do? ";
+        if (size == 4) message += "(move: east, west, north, ";
+        else  message += "(move or shoot: east, west, north, ";
+
+        if (!fountainActive && UserInterface.movementOptions.ContainsKey("Activate Fountain")) message += "south, or activate fountain) ";
+        else message += "or south) ";
+
+        movement = _interface.ReadInput(message, UserInterface.movementOptions);
+        
         string bounds = "You hit the wall. ";
         switch (movement)
         {
@@ -292,10 +315,13 @@ public class Movement
             case "Shoot South":
                 Shoot((location.x, location.y + 1));
                 break;
-
+            case "Activate Fountain":
+                GameLoop.fountainActive = true;
+                UserInterface.movementOptions.Remove("Activate Fountain");
+                break;
         }
-        loop = HitObstacles();
-        if (location == (size,size)) loop = false;
+        loop = HitObstacles(UserInterface.movementOptions, changeUserOptions);
+        //if (location == (size,size)) loop = false;
     }
 
     public void Shoot((int, int) gridSquare)
@@ -308,10 +334,9 @@ public class Movement
         arrows --;
     }
 
-    public bool HitObstacles()
+    public bool HitObstacles(Dictionary<string, List<string>> movementOptions, UserInterface.ChangeUserOptions changeUserOptions)
     {
         string item = worldGrid[location];
-            Console.WriteLine(item);
             switch (item)
             {
                 case "Pit":
@@ -322,11 +347,24 @@ public class Movement
                     return false;
                 case "Maelstrom":
                     return true;
-                case "Entrance":
-                    Console.WriteLine("You are at the entrance. ");
+                case "Fountain":
+                    if (!GameLoop.fountainActive) changeUserOptions.AddFountain();
+                    else 
+                    {
+                        movementOptions.Remove("Activate Fountain");
+                        Console.WriteLine("You hear the rushing waters from the Fountain of Objects. It has been reactivated!");
+                    }
+                    return true;
+                case "entrance":
+                    if (GameLoop.fountainActive) 
+                    {
+                        Console.WriteLine("You have succesfully activated the fountain and exited the cave! ");
+                        return false;
+                    }
+                    else Console.WriteLine("You see light in this room coming from outside the cavern. This is the entrance. ");
                     return true;
                 default:
-                    return true;
+                return true;
             }
     }
 
