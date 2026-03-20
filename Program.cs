@@ -1,4 +1,5 @@
 ﻿
+using System.Drawing;
 using System.Security.Cryptography.X509Certificates;
 
 class Program
@@ -17,15 +18,24 @@ class GameLoop
     public static Movement? movement;
     static readonly Obstacles Obstacles = new();
     static readonly UserInterface _interface = new();
-    public GameLoop(int size)
+    public int size;
+    public GameLoop(int _size)
     {
+        size = _size;
         movement = new Movement(size);
+        _interface.AddShooting(size);
         Obstacles.RandomizeObstacles(size, ref movement.worldGrid);
+        int arrowsLeft = movement.arrows;
         while (loop)
         {
             Obstacles.PrintGrid(movement.worldGrid, size, movement.location);
             _interface.PrintMessages();
             Obstacles.SenseObstacles(movement.worldGrid, movement.location, size);
+            if (arrowsLeft > movement.arrows) 
+            {
+                arrowsLeft = movement.arrows;
+                Console.WriteLine($"You have {arrowsLeft} arrows left.");
+            }
             movement.Move(ref loop, size, _interface);
         }
     }
@@ -33,22 +43,36 @@ class GameLoop
 
 public class UserInterface
 {
-    public static readonly Dictionary<string, List<string>> movementOptions = new()
+    public static Dictionary<string, List<string>> movementOptions = new()
     {
         {"East", new List<string>{"move east","Move East", "Move east", "move East", "East", "east"}},
         {"West", new List<string>{"move west", "Move West", "Move west", "move West", "West", "west"}},
         {"North", new List<string>{"move north", "Move North", "Move north", "move North", "North", "north"}},
-        {"South", new List<string>{"move south", "Move South", "Move south", "move South", "South", "south"}}
+        {"South", new List<string>{"move south", "Move South", "Move south", "move South", "South", "south"}},
     };
+    public void AddShooting(int size)
+    {
+        if (size != 4)
+        {
+            Dictionary<string, List<string>> shootingOptions = new()
+            {
+                {"Shoot South", new List<string>{"shoot south", "Shoot South", "Shoot south", "shoot South"}},
+                {"Shoot North", new List<string>{"shoot north", "Shoot North", "Shoot north", "shoot North"}},
+                {"Shoot East", new List<string>{"shoot east", "Shoot East", "Shoot east", "shoot East"}},
+                {"Shoot West", new List<string>{"shoot west", "Shoot West", "Shoot west", "shoot West"}}
+            };
+            foreach(KeyValuePair<string, List<string>> items in shootingOptions) movementOptions.Add(items.Key, items.Value);
+        }
+    }
 
         public void PrintMessages()
-    {
-        for (int length = 0; length < Console.WindowWidth; length ++)
         {
-            Console.Write("-");
+            for (int length = 0; length < Console.WindowWidth; length ++)
+            {
+                Console.Write("-");
+            }
+            Console.WriteLine();
         }
-        Console.WriteLine();
-    }
 
     public string? ReadInput(string message, Dictionary<string, List<string>> dict)
     {
@@ -198,14 +222,8 @@ public class Obstacles
             }
         }
 
-        void loop((int x, int y) player)
-        {
-            
-        }
-
         void CheckForObstacles((int, int) locationToCheck)
         {
-            List<string> obstacles = [];
             if (worldGrid[locationToCheck] == "Pit") Console.WriteLine("You feel a draft. There is a pit in a nearby room.");
             if (worldGrid[locationToCheck] == "Maelstroms") Console.WriteLine("You hear the growling and groaning of a maelstrom nearby."); 
             if (worldGrid[locationToCheck] == "Amaroks") Console.WriteLine("You can smell the rotten stench of an amarok in a nearby room."); 
@@ -217,6 +235,7 @@ public class Movement
 {
     public (int x, int y) location = (1, 1);
     public Dictionary<(int x, int y), string> worldGrid = new();
+    public int arrows = 5;
 
     public Movement(int size)
     {
@@ -235,13 +254,13 @@ public class Movement
             }
         }
     }
-
-
     
     public void Move(ref bool loop, int size, UserInterface _interface)
     {
         Console.WriteLine($"You are in a room at {location.x}, {location.y}");
-        string? movement = _interface.ReadInput("What do you want to do? (move east, move west, move north, move south) ", UserInterface.movementOptions);
+        string? movement;
+        if (size == 4) movement = _interface.ReadInput("What do you want to do? (move: east, west, north, or south) ", UserInterface.movementOptions);
+        else movement = _interface.ReadInput("What do you want to do? (move or shoot: east, west, north, or south) ", UserInterface.movementOptions);
         string bounds = "You hit the wall. ";
         switch (movement)
         {
@@ -261,9 +280,32 @@ public class Movement
                 if (location.y == size) Console.WriteLine(bounds);
                 else location.y += 1;
                 break; 
+            case "Shoot East":
+                Shoot((location.x + 1, location.y));
+                break; 
+            case "Shoot West":
+                Shoot((location.x - 1, location.y));
+                break; 
+            case "Shoot North":
+                Shoot((location.x, location.y - 1));
+                break; 
+            case "Shoot South":
+                Shoot((location.x, location.y + 1));
+                break;
+
         }
         loop = HitObstacles();
         if (location == (size,size)) loop = false;
+    }
+
+    public void Shoot((int, int) gridSquare)
+    {
+        if (arrows == 0) Console.WriteLine("You cannot shoot, you are out of arrows. "); 
+        else if (worldGrid[gridSquare] == "Amaroks")
+        {
+            worldGrid[gridSquare] = "";
+        }
+        arrows --;
     }
 
     public bool HitObstacles()
